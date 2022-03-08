@@ -1,4 +1,4 @@
-if(EXISTS EXISTS "${CURRENT_INSTALLED_DIR}/share/libressl/copyright"
+if(EXISTS "${CURRENT_INSTALLED_DIR}/share/libressl/copyright"
     OR EXISTS "${CURRENT_INSTALLED_DIR}/share/boringssl/copyright")
     message(FATAL_ERROR "Can't build openssl if libressl/boringssl is installed. Please remove libressl/boringssl, and try install openssl again if you need it.")
 endif()
