@@ -3,6 +3,11 @@ if(EXISTS "${CURRENT_INSTALLED_DIR}/share/libressl/copyright"
     message(FATAL_ERROR "Can't build openssl if libressl/boringssl is installed. Please remove libressl/boringssl, and try install openssl again if you need it.")
 endif()
 
+if(EXISTS "${CURRENT_INSTALLED_DIR}/share/openssl1/copyright")
+    message(WARNING "This port is empty if OpenSSL 1.1.1 is installed. Uninstall openssl1 if you want to use Openssl 3.x via this port instead.")
+    SET(VCPKG_POLICY_EMPTY_PACKAGE enabled)
+    return()
+endif()
 set(OPENSSL_VERSION 3.0.2)
 vcpkg_download_distfile(
     ARCHIVE
