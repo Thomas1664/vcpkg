@@ -18,15 +18,14 @@ file(COPY "${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt" DESTINATION "${SOURCE_PATH}
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES
-        libjpeg-turbo USE_JPEG
-        tiff USE_TIFF
-        libwebp USE_WEBP
+        libjpeg-turbo   USE_JPEG
+        tiff            USE_TIFF
+        libwebp         USE_WebP
 )
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
-        "-DCURRENT_INSTALLED_DIR=${CURRENT_INSTALLED_DIR}"
         -DUSE_PNG=ON
         ${FEATURE_OPTIONS}
 )

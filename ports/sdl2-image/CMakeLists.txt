@@ -3,27 +3,17 @@ project(SDL2_image C)
 
 ### configuration ###
 
-list(APPEND CMAKE_MODULE_PATH "${CURRENT_INSTALLED_DIR}/share/libwebp")
-# enable all file formats which are supported natively
+# File formats which are supported natively
 set(SUPPORTED_FORMATS BMP GIF LBM PCX PNM TGA XPM XCF XV SVG)
 
-# enable all file formats which are supported through external dependencies
-# first try to load them statically (lib file in vcpkg installation)
-# if this fails try to make them a dynamic dependency (dll will be loaded at runtime) if possible. vcpkg cannot resolve these dependencies!
-# else do not support this file format at all
-
+# File formats which are supported through external dependencies
 # Can be explicitly enabled or disabled via USE_XYZ
-set(DEPENDENCIES PNG JPEG TIFF WEBP)
+set(DEPENDENCIES PNG JPEG TIFF WebP)
 
 # patch library names for preprocessor flags
 set(JPEG_FLAG JPG)
 set(TIFF_FLAG TIF)
-
-# names of potentially dynamically loaded libraries
-set(JPEG_DYNAMIC \"libjpeg-9${VCPKG_TARGET_SHARED_LIBRARY_SUFFIX}\")
-set(PNG_DYNAMIC \"libpng16-16${VCPKG_TARGET_SHARED_LIBRARY_SUFFIX}\")
-set(TIFF_DYNAMIC \"libtiff-5${VCPKG_TARGET_SHARED_LIBRARY_SUFFIX}\")
-set(WEBP_DYNAMIC \"libwebp-4${VCPKG_TARGET_SHARED_LIBRARY_SUFFIX}\")
+set(WebP_FLAGS WEBP)
 
 ### implementation ###
 
@@ -78,29 +68,16 @@ foreach(DEPENDENCY IN LISTS DEPENDENCIES)
     if(NOT USE_${DEPENDENCY})
         continue()
     endif()
-    find_package(${DEPENDENCY})
+
+    find_package(${DEPENDENCY} REQUIRED)
 
     if(NOT DEFINED ${DEPENDENCY}_FLAG)
         set(${DEPENDENCY}_FLAG ${DEPENDENCY})
     endif()
-
     add_definitions(-DLOAD_${${DEPENDENCY}_FLAG})
-    if(${DEPENDENCY}_FOUND)
-        message(STATUS "  --> linking statically.")
-        target_link_libraries(SDL2_image ${${DEPENDENCY}_LIBRARIES})
-    elseif(DEFINED ${DEPENDENCY}_DYNAMIC)
-        message(STATUS "  --> linking dynamically.")
-        add_definitions(-DLOAD_${${DEPENDENCY}_FLAG}_DYNAMIC=${${DEPENDENCY}_DYNAMIC})
-        set(RUNTIME_DEPENDENCIES ON)
-    else()
-        message(STATUS "  --> skipping.")
-    endif()
+
+    target_link_libraries(SDL2_image ${${DEPENDENCY}_LIBRARIES})
 endforeach(DEPENDENCY)
-
-if(DEFINED RUNTIME_DEPENDENCIES)
-    include_directories(VisualC/external/include)
-endif()
-
 
 install(TARGETS SDL2_image
     EXPORT SDL2_image
@@ -145,16 +122,7 @@ install(EXPORT SDL2_image
 message(STATUS "Link-time dependencies:")
 message(STATUS "  " SDL2::SDL2)
 foreach(DEPENDENCY ${DEPENDENCIES})
-    if(${DEPENDENCY}_FOUND)
+    if(USE_${DEPENDENCY})
         message(STATUS "  " ${DEPENDENCY})
     endif()
 endforeach(DEPENDENCY)
-
-if(DEFINED RUNTIME_DEPENDENCIES)
-    message(STATUS "Run-time dependencies:")
-    foreach(DEPENDENCY ${DEPENDENCIES})
-        if(NOT ${DEPENDENCY}_FOUND AND DEFINED ${DEPENDENCY}_DYNAMIC)
-            message(STATUS "  " ${${DEPENDENCY}_DYNAMIC})
-        endif()
-    endforeach(DEPENDENCY)
-endif()
