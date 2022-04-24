@@ -7,20 +7,20 @@ It must have a top level object, and all fields are case sensitive.
 ## Examples:
 
 The most important fields in a manifest, the ones which are required for all ports,
-are the `"name"` field, and a version field (for now, just `"version-string"`).
+are the `"name"` field, and a version field.
 There's more information about these fields below.
 
 ```json
 {
   "name": "ace",
-  "version-string": "6.5.5"
+  "version": "6.5.5"
 }
 ```
 
 ```json
 {
   "name": "vtk",
-  "version-string": "8.2.0",
+  "version": "8.2.0",
   "port-version": 2,
   "description": "Software system for 3D computer graphics, image processing, and visualization",
   "dependencies": [
@@ -123,7 +123,7 @@ this field should be set back to `0` (i.e., delete the `"port-version"` field).
 
 ```json
 {
-  "version": "2019-03-21"
+  "version-date": "2019-03-21"
 }
 ```
 
@@ -247,7 +247,7 @@ On installation the dependencies from all selected features are combined to prod
 ```json
 {
   "name": "vtk",
-  "version-string": "8.2.0",
+  "version": "8.2.0",
   "port-version": 2,
   "description": "Software system for 3D computer graphics, image processing, and visualization",
   "dependencies": [
