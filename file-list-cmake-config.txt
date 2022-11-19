@@ -1,0 +1,15 @@
+usd:x64-linux:/debug/pxrConfig.cmake
+wpilib:x64-linux:/debug/wpilib/ntcore-config.cmake
+wpilib:x64-linux:/debug/wpilib/ntcore-debug.cmake
+wpilib:x64-linux:/debug/wpilib/ntcore.cmake
+wpilib:x64-linux:/debug/wpilib/wpilib-config.cmake
+wpilib:x64-linux:/debug/wpilib/wpiutil-config.cmake
+wpilib:x64-linux:/debug/wpilib/wpiutil-debug.cmake
+wpilib:x64-linux:/debug/wpilib/wpiutil.cmake
+wpilib:x64-linux:/wpilib/ntcore-config.cmake
+wpilib:x64-linux:/wpilib/ntcore-release.cmake
+wpilib:x64-linux:/wpilib/ntcore.cmake
+wpilib:x64-linux:/wpilib/wpilib-config.cmake
+wpilib:x64-linux:/wpilib/wpiutil-config.cmake
+wpilib:x64-linux:/wpilib/wpiutil-release.cmake
+wpilib:x64-linux:/wpilib/wpiutil.cmake

@@ -1,7 +1,3 @@
-if(NOT VCPKG_TARGET_IS_LINUX)
-    message(FATAL_ERROR "${PORT} currently only supports Linux platform.")
-endif()
-
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO pistacheio/pistache

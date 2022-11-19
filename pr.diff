@@ -1,0 +1,418 @@
+diff --git a/ports/sdl2-ttf/fix-find_dependencies.patch b/ports/sdl2-ttf/fix-find_dependencies.patch
+new file mode 100644
+index 000000000..946b58cfe
+--- /dev/null
++++ b/ports/sdl2-ttf/fix-find_dependencies.patch
+@@ -0,0 +1,68 @@
++diff --git a/CMakeLists.txt b/CMakeLists.txt
++index a097d5c..66775c2 100644
++--- a/CMakeLists.txt
+++++ b/CMakeLists.txt
++@@ -59,7 +59,7 @@ option(SDL2TTF_HARFBUZZ "Use harfbuzz to improve text shaping" OFF)
++ set(SDL2TTF_HARFBUZZ_VENDORED "${SDL2TTF_VENDORED}")
++ 
++ # Save BUILD_SHARED_LIBS variable
++-set(SDL2TTF_BUILD_SHARED_LIBS "${BUILD_SHARED_LIBS}")
+++set(SDL2TTF_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
++ 
++ if(SDL2TTF_BUILD_SHARED_LIBS)
++     set(sdl2_ttf_export_name SDL2_ttf)
++@@ -164,6 +164,7 @@ set(PC_REQUIRES)
++ set(BUILD_SHARED_LIBS OFF)
++ 
++ if(SDL2TTF_HARFBUZZ)
+++    if(0)
++     if(SDL2TTF_HARFBUZZ_VENDORED)
++         message(STATUS "${PROJECT_NAME}: Using vendored harfbuzz library")
++         # HB_BUILD_UTILS variable is used by harfbuzz
++@@ -192,9 +193,16 @@ if(SDL2TTF_HARFBUZZ)
++     endif()
++     target_compile_definitions(SDL2_ttf PRIVATE TTF_USE_HARFBUZZ=1)
++     target_link_libraries(SDL2_ttf PRIVATE harfbuzz::harfbuzz)
+++    endif()
+++
+++    find_package(harfbuzz REQUIRED)
+++    target_compile_definitions(SDL2_ttf PRIVATE TTF_USE_HARFBUZZ=1)
+++    target_link_libraries(SDL2_ttf PRIVATE harfbuzz::harfbuzz)
+++
++ endif()
++ 
++ if(SDL2TTF_FREETYPE)
+++    if(0)
++     if(SDL2TTF_FREETYPE_VENDORED)
++         message(STATUS "${PROJECT_NAME}: Using vendored freetype library")
++         # FT_DISABLE_ZLIB variable is used by freetype
++@@ -232,7 +240,11 @@ if(SDL2TTF_FREETYPE)
++         find_package(Freetype REQUIRED)
++         list(APPEND PC_REQUIRES freetype2)
++     endif()
+++    endif()
+++    list(APPEND PC_REQUIRES freetype2)
+++    find_package(Freetype REQUIRED)
++     target_link_libraries(SDL2_ttf PRIVATE Freetype::Freetype)
+++
++ endif()
++ 
++ # Restore BUILD_SHARED_LIBS variable
++@@ -325,7 +337,7 @@ if(SDL2TTF_INSTALL)
++         COMPONENT devel
++     )
++ 
++-    if(SDL2TTF_BUILD_SHARED_LIBS)
+++    if(1)
++         # Only create a .pc file for a shared SDL2_ttf
++         set(prefix "${CMAKE_INSTALL_PREFIX}")
++         set(exec_prefix "\${prefix}")
++@@ -352,7 +364,7 @@ if(SDL2TTF_INSTALL)
++             \"${CMAKE_CURRENT_BINARY_DIR}/SDL2_ttf.pc\" ONLY_IF_DIFFERENT)
++         file(INSTALL DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${PC_DESTDIR}\"
++             TYPE FILE
++-            FILES \"${CMAKE_CURRENT_BINARY_DIR}/SDL2_ttf.pc\")" CONFIG Release)
+++            FILES \"${CMAKE_CURRENT_BINARY_DIR}/SDL2_ttf.pc\")")
++     endif()
++ 
++     if(SDL2TTF_BUILD_SHARED_LIBS AND (APPLE OR (UNIX AND NOT ANDROID)))
+diff --git a/ports/sdl2-ttf/portfile.cmake b/ports/sdl2-ttf/portfile.cmake
+index 781c47766..6dc790016 100644
+--- a/ports/sdl2-ttf/portfile.cmake
++++ b/ports/sdl2-ttf/portfile.cmake
+@@ -1,31 +1,32 @@
+-set(VERSION 2.0.15)
++set(VERSION 2.20.0)
+ 
+-vcpkg_download_distfile(ARCHIVE
+-    URLS "https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-${VERSION}.tar.gz"
+-    FILENAME "SDL2_ttf-${VERSION}.tar.gz"
+-    SHA512 30d685932c3dd6f2c94e2778357a5c502f0421374293d7102a64d92f9c7861229bf36bedf51c1a698b296a58c858ca442d97afb908b7df1592fc8d4f8ae8ddfd
+-)
+-
+-vcpkg_extract_source_archive_ex(
++vcpkg_from_github(
+     OUT_SOURCE_PATH SOURCE_PATH
+-    ARCHIVE ${ARCHIVE}
+-    REF ${VERSION}
++    REPO  libsdl-org/SDL_ttf
++    REF f5e4828ffc9d3a84f00011fede4446aecb4a685f #v2.20.0
++    SHA512 c0d2d6107e5427d9c1353e14cb4b0c3957d28391cfc772f1f972fe3aa8ba9e9dfdfcb64acd317a7836d46b3a50da9597b19a832f0baf5198654acb7b31ab1e6b
++    HEAD_REF main
++    PATCHES
++        fix-find_dependencies.patch
+ )
+ 
+-file(COPY ${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt DESTINATION ${SOURCE_PATH})
++vcpkg_cmake_configure(
++    SOURCE_PATH "${SOURCE_PATH}"
++    OPTIONS
++        -DSDL2TTF_SAMPLES=OFF
++)
+ 
+-vcpkg_configure_cmake(
+-    SOURCE_PATH ${SOURCE_PATH}
+-    PREFER_NINJA
+-    OPTIONS_DEBUG
+-        -DSDL_TTF_SKIP_HEADERS=ON)
++vcpkg_cmake_install()
++if(VCPKG_TARGET_IS_WINDOWS)
++    vcpkg_cmake_config_fixup(CONFIG_PATH cmake PACKAGE_NAME SDL2_ttf)
++else()
++    vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/SDL2_ttf PACKAGE_NAME SDL2_ttf)
++endif()
+ 
+-vcpkg_install_cmake()
+-vcpkg_copy_pdbs()
+-vcpkg_fixup_cmake_targets()
+ vcpkg_fixup_pkgconfig()
+ 
+-file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/share)
++file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include")
++file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/share")
++file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/share/licenses")
+ 
+-file(COPY ${SOURCE_PATH}/COPYING.txt DESTINATION ${CURRENT_PACKAGES_DIR}/share/sdl2-ttf)
+-file(RENAME ${CURRENT_PACKAGES_DIR}/share/sdl2-ttf/COPYING.txt ${CURRENT_PACKAGES_DIR}/share/sdl2-ttf/copyright)
++file(INSTALL "${SOURCE_PATH}/LICENSE.txt" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+diff --git a/ports/sdl2-ttf/vcpkg.json b/ports/sdl2-ttf/vcpkg.json
+index 58978546c..b75c0e288 100644
+--- a/ports/sdl2-ttf/vcpkg.json
++++ b/ports/sdl2-ttf/vcpkg.json
+@@ -1,11 +1,19 @@
+ {
+   "name": "sdl2-ttf",
+-  "version-string": "2.0.15",
+-  "port-version": 5,
++  "version": "2.20.0",
+   "description": "A library for rendering TrueType fonts with SDL",
+   "homepage": "https://www.libsdl.org/projects/SDL_ttf/",
++  "license": "Zlib",
+   "dependencies": [
+     "freetype",
+-    "sdl2"
++    "sdl2",
++    {
++      "name": "vcpkg-cmake",
++      "host": true
++    },
++    {
++      "name": "vcpkg-cmake-config",
++      "host": true
++    }
+   ]
+ }
+diff --git a/ports/sdl2pp/fix-dependencies.patch b/ports/sdl2pp/fix-dependencies.patch
+index 48e5c8f97..865c87c11 100644
+--- a/ports/sdl2pp/fix-dependencies.patch
++++ b/ports/sdl2pp/fix-dependencies.patch
+@@ -1,5 +1,5 @@
+ diff --git a/CMakeLists.txt b/CMakeLists.txt
+-index cdfd2a6..dc08748 100644
++index cdfd2a6..5324fad 100644
+ --- a/CMakeLists.txt
+ +++ b/CMakeLists.txt
+ @@ -23,11 +23,15 @@ ENDIF(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+@@ -22,7 +22,7 @@ index cdfd2a6..dc08748 100644
+  
+  IF(MINGW)
+  	SET(MINGW32_LIBRARY "mingw32" CACHE STRING "mingw32 library")
+-@@ -36,27 +40,27 @@ IF(MINGW)
++@@ -36,27 +40,33 @@ IF(MINGW)
+  ENDIF(MINGW)
+  
+  IF(SDL2PP_WITH_IMAGE)
+@@ -41,9 +41,15 @@ index cdfd2a6..dc08748 100644
+ -	FIND_PACKAGE(SDL2_ttf REQUIRED)
+ -	SET(SDL2_ALL_INCLUDE_DIRS ${SDL2_ALL_INCLUDE_DIRS} ${SDL2_TTF_INCLUDE_DIR})
+ -	SET(SDL2_ALL_LIBRARIES ${SDL2_ALL_LIBRARIES} ${SDL2_TTF_LIBRARY})
+-+	FIND_PACKAGE(sdl2-ttf CONFIG REQUIRED)
+++	FIND_PACKAGE(SDL2_ttf CONFIG REQUIRED)
+ +	SET(SDL2_ALL_INCLUDE_DIRS ${SDL2_ALL_INCLUDE_DIRS})
+-+	SET(SDL2_ALL_LIBRARIES ${SDL2_ALL_LIBRARIES} SDL2::SDL2_ttf)
+++
+++	IF (BUILD_SHARED_LIBS)
+++    SET(SDL2_ALL_LIBRARIES ${SDL2_ALL_LIBRARIES} SDL2_ttf::SDL2_ttf)
+++ELSE()
+++    SET(SDL2_ALL_LIBRARIES ${SDL2_ALL_LIBRARIES} SDL2_ttf::SDL2_ttf-static)
+++ENDIF()
+++
+  	SET(SDL2_ALL_PKGCONFIG_MODULES "${SDL2_ALL_PKGCONFIG_MODULES} SDL2_ttf")
+  ELSE(SDL2PP_WITH_TTF)
+  	MESSAGE(STATUS "SDL2_ttf support disabled")
+@@ -59,7 +65,7 @@ index cdfd2a6..dc08748 100644
+  	SET(SDL2_ALL_PKGCONFIG_MODULES "${SDL2_ALL_PKGCONFIG_MODULES} SDL2_mixer")
+  ELSE(SDL2PP_WITH_MIXER)
+  	MESSAGE(STATUS "SDL2_mixer support disabled")
+-@@ -81,7 +85,6 @@ ELSE(MSVC)
++@@ -81,7 +91,6 @@ ELSE(MSVC)
+  	ENDIF()
+  ENDIF(MSVC)
+  
+@@ -67,13 +73,11 @@ index cdfd2a6..dc08748 100644
+  
+  INCLUDE_DIRECTORIES(BEFORE ${PROJECT_SOURCE_DIR})
+  INCLUDE_DIRECTORIES(SYSTEM ${SDL2_ALL_INCLUDE_DIRS})
+-@@ -200,10 +203,10 @@ IF(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+- 	OPTION(SDL2PP_STATIC "Build static library instead of shared one" OFF)
+- 
++@@ -202,8 +211,9 @@ IF(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+  	# library
+--	IF(SDL2PP_STATIC)
+-+	IF(0)
++ 	IF(SDL2PP_STATIC)
+  		ADD_LIBRARY(SDL2pp STATIC ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
+++		TARGET_LINK_LIBRARIES(SDL2pp ${SDL2_ALL_LIBRARIES})
+  	ELSE(SDL2PP_STATIC)
+ -		ADD_LIBRARY(SDL2pp SHARED ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
+ +		ADD_LIBRARY(SDL2pp ${LIBRARY_SOURCES} ${LIBRARY_HEADERS})
+diff --git a/ports/sdl2pp/vcpkg.json b/ports/sdl2pp/vcpkg.json
+index 316c630be..2c454483e 100644
+--- a/ports/sdl2pp/vcpkg.json
++++ b/ports/sdl2pp/vcpkg.json
+@@ -1,9 +1,10 @@
+ {
+   "name": "sdl2pp",
+   "version": "0.16.1",
+-  "port-version": 2,
++  "port-version": 3,
+   "description": "C++11 bindings/wrapper for SDL2",
+   "homepage": "https://sdl2pp.amdmi3.ru",
++  "license": "Zlib",
+   "dependencies": [
+     "sdl2",
+     "sdl2-image",
+diff --git a/ports/tgui/fix-dependencies.patch b/ports/tgui/fix-dependencies.patch
+index ad6b7107c..fd5b093a2 100644
+--- a/ports/tgui/fix-dependencies.patch
++++ b/ports/tgui/fix-dependencies.patch
+@@ -1,27 +1,35 @@
+ diff --git a/src/Backends/SDL/CMakeLists.txt b/src/Backends/SDL/CMakeLists.txt
+-index d86f11d..1e31e21 100644
++index d86f11d3..42b708d8 100644
+ --- a/src/Backends/SDL/CMakeLists.txt
+ +++ b/src/Backends/SDL/CMakeLists.txt
+-@@ -1,10 +1,10 @@
++@@ -1,10 +1,14 @@
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake_modules)
+  
+ -find_package(SDL2 REQUIRED)
+ -find_package(SDL2_ttf REQUIRED)
+ +find_package(SDL2 CONFIG REQUIRED)
+-+find_package(sdl2-ttf CONFIG REQUIRED)
+++find_package(SDL2_ttf CONFIG REQUIRED)
+  
+  # Link to SDL and set include and library search directories
+ -target_link_libraries(tgui PRIVATE SDL2::Core SDL2::TTF)
+-+target_link_libraries(tgui PRIVATE SDL2::SDL2 SDL2::SDL2_ttf)
+++if(BUILD_SHARED_LIBS)
+++    target_link_libraries(tgui PRIVATE SDL2::SDL2 SDL2_ttf::SDL2_ttf)
+++else()
+++    target_link_libraries(tgui PRIVATE SDL2::SDL2 SDL2_ttf::SDL2_ttf-static)
+++endif()
+  
+  # Add the backend source files to the library
+  target_sources(tgui PRIVATE
+-@@ -19,7 +19,7 @@ target_sources(tgui PRIVATE
++@@ -19,7 +23,11 @@ target_sources(tgui PRIVATE
+  )
+  
+  add_library(tgui-sdl-interface INTERFACE)
+ -target_link_libraries(tgui-sdl-interface INTERFACE SDL2::Core SDL2::TTF SDL2::Main)
+-+target_link_libraries(tgui-sdl-interface INTERFACE SDL2::SDL2 SDL2::SDL2_ttf SDL2::SDL2main)
+++if(BUILD_SHARED_LIBS)
+++    target_link_libraries(tgui-sdl-interface INTERFACE SDL2::SDL2 SDL2_ttf::SDL2_ttf SDL2::SDL2main)
+++else()
+++    target_link_libraries(tgui-sdl-interface INTERFACE SDL2::SDL2 SDL2_ttf::SDL2_ttf-static SDL2::SDL2main)
+++endif()
+  
+  # Also link to OpenGL or OpenGL ES
+  if(NOT TGUI_USE_GLES)
+diff --git a/ports/tgui/portfile.cmake b/ports/tgui/portfile.cmake
+index fc5fa414f..65fb7606b 100644
+--- a/ports/tgui/portfile.cmake
++++ b/ports/tgui/portfile.cmake
+@@ -9,8 +9,8 @@ vcpkg_from_github(
+         fix-dependencies.patch
+ )
+ 
+-set(TGUI_SHARE_PATH ${CURRENT_PACKAGES_DIR}/share/tgui)
+-set(TGUI_TOOLS_PATH ${CURRENT_PACKAGES_DIR}/tools/tgui)
++set(TGUI_SHARE_PATH "${CURRENT_PACKAGES_DIR}/share/${PORT}")
++set(TGUI_TOOLS_PATH "${CURRENT_PACKAGES_DIR}/tools/${PORT}")
+ 
+ # Enable static build
+ file(REMOVE "${SOURCE_PATH}/cmake/Modules/FindSFML.cmake")
+@@ -58,8 +58,11 @@ file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/include/TGUI/extlibs/nanosvg" "${CU
+ ) # All folders are empty
+ 
+ file(RENAME "${CURRENT_PACKAGES_DIR}/share/doc" "${CURRENT_PACKAGES_DIR}/share/${PORT}/doc")
++file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/share/${PORT}/doc")
+ 
+ vcpkg_fixup_pkgconfig()
+ 
+-# Handle copyright
++# Broken
++file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
++
+ file(INSTALL "${SOURCE_PATH}/license.txt" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+diff --git a/ports/tgui/usage b/ports/tgui/usage
+new file mode 100644
+index 000000000..564c9225b
+--- /dev/null
++++ b/ports/tgui/usage
+@@ -0,0 +1,3 @@
++# tgui provides CMake targets:
++    find_package(TGUI CONFIG REQUIRED)
++    target_link_libraries(main PRIVATE tgui)
+diff --git a/ports/tgui/vcpkg.json b/ports/tgui/vcpkg.json
+index 2dce59186..3c5346652 100644
+--- a/ports/tgui/vcpkg.json
++++ b/ports/tgui/vcpkg.json
+@@ -1,7 +1,7 @@
+ {
+   "name": "tgui",
+   "version-date": "2021-04-19",
+-  "port-version": 3,
++  "port-version": 4,
+   "description": "TGUI is an easy to use, cross-platform, C++ GUI for SFML.",
+   "homepage": "https://tgui.eu",
+   "license": "Zlib",
+diff --git a/versions/baseline.json b/versions/baseline.json
+index 3c31511fe..68099edd9 100644
+--- a/versions/baseline.json
++++ b/versions/baseline.json
+@@ -12,7 +12,6 @@
+       "baseline": "3.0.5",
+       "port-version": 0
+     },
+-
+     "abseil": {
+       "baseline": "20211102.1",
+       "port-version": 0
+@@ -6478,12 +6477,12 @@
+       "port-version": 9
+     },
+     "sdl2-ttf": {
+-      "baseline": "2.0.15",
+-      "port-version": 5
++      "baseline": "2.20.0",
++      "port-version": 0
+     },
+     "sdl2pp": {
+       "baseline": "0.16.1",
+-      "port-version": 2
++      "port-version": 3
+     },
+     "seal": {
+       "baseline": "3.7.2",
+@@ -7011,7 +7010,7 @@
+     },
+     "tgui": {
+       "baseline": "2021-04-19",
+-      "port-version": 3
++      "port-version": 4
+     },
+     "theia": {
+       "baseline": "0.8",
+diff --git a/versions/s-/sdl2-ttf.json b/versions/s-/sdl2-ttf.json
+index 65d49c1b0..e36cb6637 100644
+--- a/versions/s-/sdl2-ttf.json
++++ b/versions/s-/sdl2-ttf.json
+@@ -1,5 +1,10 @@
+ {
+   "versions": [
++    {
++      "git-tree": "03c593128b3bdd3b37958dea07840d94584fdd79",
++      "version": "2.20.0",
++      "port-version": 0
++    },
+     {
+       "git-tree": "cefc95479a9fa2c8a8c4f5539952978f77e3de99",
+       "version-string": "2.0.15",
+diff --git a/versions/s-/sdl2pp.json b/versions/s-/sdl2pp.json
+index f009fb9ac..738705db1 100644
+--- a/versions/s-/sdl2pp.json
++++ b/versions/s-/sdl2pp.json
+@@ -1,5 +1,10 @@
+ {
+   "versions": [
++    {
++      "git-tree": "b8a532cad04d7f9d5d90d3cfc95abcd1be1a896b",
++      "version": "0.16.1",
++      "port-version": 3
++    },
+     {
+       "git-tree": "99074ba7a6f080e0b9c74dde8254875c95c7d9ea",
+       "version": "0.16.1",
+diff --git a/versions/t-/tgui.json b/versions/t-/tgui.json
+index c808cac11..be7106d38 100644
+--- a/versions/t-/tgui.json
++++ b/versions/t-/tgui.json
+@@ -1,5 +1,10 @@
+ {
+   "versions": [
++    {
++      "git-tree": "3338b8447726da75f3b04d166e364d7b31f45bb8",
++      "version-date": "2021-04-19",
++      "port-version": 4
++    },
+     {
+       "git-tree": "0fe7d561ea6d038584711e8581f6a5a72062c543",
+       "version-date": "2021-04-19",

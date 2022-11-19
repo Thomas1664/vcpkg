@@ -47,11 +47,13 @@ vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES
         tools       BUILD_OSG_APPLICATIONS
         examples    BUILD_OSG_EXAMPLES
+        examples    CMAKE_REQUIRE_FIND_PACKAGE_SDL2
         plugins     BUILD_OSG_PLUGINS_BY_DEFAULT
         plugins     CMAKE_REQUIRE_FIND_PACKAGE_CURL
-        plugins     CMAKE_REQUIRE_FIND_PACKAGE_Jasper
         plugins     CMAKE_REQUIRE_FIND_PACKAGE_GDAL
+        plugins     CMAKE_REQUIRE_FIND_PACKAGE_Jasper
         plugins     CMAKE_REQUIRE_FIND_PACKAGE_GTA
+        plugins     CMAKE_REQUIRE_FIND_PACKAGE_TIFF
         packages    BUILD_OSG_PACKAGES
         docs        BUILD_DOCUMENTATION
         docs        BUILD_REF_DOCS_SEARCHENGINE
@@ -69,6 +71,16 @@ vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
         sdl1        BUILD_OSG_PLUGIN_SDL
     INVERTED_FEATURES
         sdl1        CMAKE_DISABLE_FIND_PACKAGE_SDL # for apps and examples
+        freetype    CMAKE_DISABLE_FIND_PACKAGE_Freetype
+        openexr     CMAKE_DISABLE_FIND_PACKAGE_OpenEXR
+        collada     CMAKE_DISABLE_FIND_PACKAGE_COLLADA
+        plugins     CMAKE_DISABLE_FIND_PACKAGE_Jasper
+        plugins     CMAKE_DISABLE_FIND_PACKAGE_GDAL
+        plugins     CMAKE_DISABLE_FIND_PACKAGE_GTA
+        plugins     CMAKE_DISABLE_FIND_PACKAGE_CURL
+        plugins     CMAKE_DISABLE_FIND_PACKAGE_TIFF
+        examples    CMAKE_DISABLE_FIND_PACKAGE_SDL2
+        nvtt        CMAKE_DISABLE_FIND_PACKAGE_NVTT
 )
 
 # The package osg can be configured to use different OpenGL profiles via a custom triplet file:
@@ -116,6 +128,16 @@ vcpkg_cmake_configure(
         -DCMAKE_DISABLE_FIND_PACKAGE_GStreamer=ON
         -DCMAKE_DISABLE_FIND_PACKAGE_GLIB=ON
         -DCMAKE_DISABLE_FIND_PACKAGE_Inventor=ON
+        -DCMAKE_DISABLE_FIND_PACKAGE_ilmbase=ON
+        -DCMAKE_DISABLE_FIND_PACKAGE_OpenCascade=ON
+        -DCMAKE_DISABLE_FIND_PACKAGE_FBX=ON
+        -DCMAKE_DISABLE_FIND_PACKAGE_LibVNCServer=ON
+        -DCMAKE_DISABLE_FIND_PACKAGE_DirectShow=ON
+        -DCMAKE_DISABLE_FIND_PACKAGE_Poppler-glib=ON
+        -DCMAKE_DISABLE_FIND_PACKAGE_DirectInput=ON
+        -DCMAKE_DISABLE_FIND_PACKAGE_RSVG=ON
+        -DCMAKE_DISABLE_FIND_PACKAGE_GtkGl=ON
+        -DCMAKE_REQUIRE_FIND_PACKAGE_ZLIB=ON
         -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON
         ${OPTIONS}
     OPTIONS_DEBUG

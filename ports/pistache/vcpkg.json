@@ -11,5 +11,13 @@
       "name": "vcpkg-tool-meson",
       "host": true
     }
-  ]
+  ],
+  "features": {
+    "ssl": {
+      "description": "Enable SSL support",
+      "dependencies": [
+        "openssl"
+      ]
+    }
+  }
 }

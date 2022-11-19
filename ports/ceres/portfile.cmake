@@ -28,20 +28,18 @@ file(REMOVE "${SOURCE_PATH}/cmake/FindMETIS.cmake")
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES
-        "suitesparse"       SUITESPARSE
-        "cxsparse"          CXSPARSE
-        "lapack"            LAPACK
-        "eigensparse"       EIGENSPARSE
-        "tools"             GFLAGS
-        "cuda"              CUDA
+        suitesparse       SUITESPARSE
+        cxsparse          CXSPARSE
+        lapack            LAPACK
+        lapack            CMAKE_REQUIRE_FIND_PACKAGE_LAPACK
+        eigensparse       EIGENSPARSE
+        tools             GFLAGS
+        cuda              CUDA
+        cuda              CMAKE_REQUIRE_FIND_PACKAGE_CUDA
 )
 if(VCPKG_TARGET_IS_UWP)
     list(APPEND FEATURE_OPTIONS -DMINIGLOG=ON)
 endif()
-
-foreach (FEATURE ${FEATURE_OPTIONS})
-    message(STATUS "${FEATURE}")
-endforeach()
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
@@ -51,7 +49,7 @@ vcpkg_cmake_configure(
         -DBUILD_BENCHMARKS=OFF
         -DBUILD_EXAMPLES=OFF
         -DBUILD_TESTING=OFF
-        -DBUILD_BENCHMARKS=OFF
+        -DBUILD_DOCUMENTATION=OFF
         -DPROVIDE_UNINSTALL_TARGET=OFF
         -DMSVC_USE_STATIC_CRT=${MSVC_USE_STATIC_CRT_VALUE}
         -DLIB_SUFFIX=${LIB_SUFFIX}

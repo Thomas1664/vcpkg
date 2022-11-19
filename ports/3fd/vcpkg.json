@@ -3,7 +3,9 @@
   "version": "2.6.3",
   "port-version": 2,
   "description": "C++ Framework For Fast Development",
-  "supports": "windows & !static & !arm64",
+  "homepage": "https://github.com/faburaya/3fd",
+  "license": "MS-PL",
+  "supports": "windows & !staticcrt & !arm64",
   "dependencies": [
     {
       "name": "boost-lockfree",

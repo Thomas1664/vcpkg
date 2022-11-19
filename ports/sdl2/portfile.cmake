@@ -42,6 +42,8 @@ vcpkg_cmake_configure(
         -DSDL_LIBC=ON
         -DSDL_HIDAPI_JOYSTICK=ON
         -DSDL_TEST=OFF
+        -DCMAKE_DISABLE_FIND_PACKAGE_Git=ON
+        -DSDL_REVISION=${VERSION}
     MAYBE_UNUSED_VARIABLES
         SDL_FORCE_STATIC_VCRT
 )

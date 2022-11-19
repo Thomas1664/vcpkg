@@ -66,6 +66,7 @@ vcpkg_cmake_configure(
         ${FEATURE_OPTIONS}
         ${COMMON_OPTIONS}
         ${OPENBLAS_EXTRA_OPTIONS}
+        -DBUILD_TESTING=OFF
 )
 
 vcpkg_cmake_install()

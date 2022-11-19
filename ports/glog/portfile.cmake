@@ -12,8 +12,10 @@ vcpkg_from_github(
 )
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
-    unwind          WITH_UNWIND
-    customprefix    WITH_CUSTOM_PREFIX
+    FEATURES    
+        unwind          WITH_UNWIND
+        unwind          CMAKE_REQUIRE_FIND_PACKAGE_Unwind
+        customprefix    WITH_CUSTOM_PREFIX
 )
 file(REMOVE "${SOURCE_PATH}/glog-modules.cmake.in")
 
@@ -21,6 +23,8 @@ vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
     OPTIONS
         -DBUILD_TESTING=OFF
+        -DWITH_GTEST=OFF
+        -DCMAKE_REQUIRE_FIND_PACKAGE_gflags=ON
         ${FEATURE_OPTIONS}
 )
 

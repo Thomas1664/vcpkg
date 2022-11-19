@@ -1,0 +1,11 @@
+- [x] cgal
+- [x] mpfr
+- [x] mp3lame
+- [x] gmp
+- [ ] wpilib
+- [ ] dlib no vendored pybind11
+- [x] libnice (license)
+- [ ] libdraw (license)
+- [ ] speex (docs)
+- [ ] taglib (license)
+- [ ] liblo (shared only)
