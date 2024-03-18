@@ -1,7 +1,16 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 61c0479..3bd3327 100644
+index 27ead9ef..10b65390 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
+@@ -51,7 +51,7 @@ endif()
+ 
+ # Find Apache Runtime
+ option(APR_STATIC "Link to the APR static library" OFF)
+-find_package(APR REQUIRED)
++find_package(unofficial-apr CONFIG REQUIRED)
+ 
+ # Find Apache Runtime Utilities
+ option(APU_STATIC "Link to the APR-Util static library" OFF)
 @@ -60,7 +60,7 @@ find_package(APR-Util REQUIRED)
  find_package( Threads REQUIRED )
  
@@ -11,3 +20,16 @@ index 61c0479..3bd3327 100644
  if(TARGET EXPAT::EXPAT)
    set(EXPAT_LIBRARIES EXPAT::EXPAT)
  elseif(TARGET expat::expat)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 5c94d1a3..581f6f06 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -21,7 +21,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/compiler-features/check-compiler-support
+ add_subdirectory(main)
+ target_compile_definitions(log4cxx PRIVATE ${LOG4CXX_COMPILE_DEFINITIONS} ${APR_COMPILE_DEFINITIONS} ${APR_UTIL_COMPILE_DEFINITIONS} )
+ target_include_directories(log4cxx INTERFACE $<INSTALL_INTERFACE:include> PRIVATE ${APR_INCLUDE_DIR} ${APR_UTIL_INCLUDE_DIR})
+-target_link_libraries(log4cxx PRIVATE ${APR_UTIL_LIBRARIES} ${EXPAT_LIBRARIES} ${APR_LIBRARIES} ${APR_SYSTEM_LIBS})
++target_link_libraries(log4cxx PRIVATE ${APR_UTIL_LIBRARIES} ${EXPAT_LIBRARIES} ${APR_LIBRARIES} unofficial::apr::libapr-1 ${APR_SYSTEM_LIBS})
+ if(HAS_LIBESMTP)
+   target_include_directories(log4cxx PRIVATE ${ESMTP_INCLUDE_DIR})
+   target_link_libraries(log4cxx PRIVATE ${ESMTP_LIBRARIES})

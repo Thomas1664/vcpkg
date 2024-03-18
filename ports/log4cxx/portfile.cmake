@@ -1,11 +1,9 @@
-vcpkg_download_distfile(ARCHIVE
-    URLS "https://archive.apache.org/dist/logging/log4cxx/${VERSION}/apache-log4cxx-${VERSION}.tar.gz"
-    FILENAME "apache-log4cxx-${VERSION}.tar.gz"
-    SHA512 377234407c5f1128fbff6e5d2fcda3f53aae275962cd9207257674fa016095f4bc4ac0c318c1ba2a75f3252402cce0776c1211ffa917a60f8a89a12f01d45efb
-)
-
-vcpkg_extract_source_archive(
-    SOURCE_PATH ARCHIVE "${ARCHIVE}"
+vcpkg_from_github(
+    OUT_SOURCE_PATH SOURCE_PATH
+    REPO apache/logging-log4cxx
+    REF "rel/v${VERSION}"
+    SHA512 8ef1de065608ed80b4de2398729a78fdf223d1f0bd2dee03e8c6a55ca0acd0f7ad110f123681198ef3e7ff4d568029999819041370f49767dba8360cb770878d
+    HEAD_REF master
     PATCHES
         fix-find-package.patch
 )
@@ -15,6 +13,7 @@ vcpkg_cmake_configure(
     OPTIONS
         -DLOG4CXX_INSTALL_PDB=OFF # Installing pdbs failed on debug static. So, disable it and let vcpkg_copy_pdbs() do it
         -DBUILD_TESTING=OFF
+        -DCMAKE_DISABLE_FIND_PACKAGE_fmt=ON
 )
 
 vcpkg_cmake_install()
@@ -28,12 +27,11 @@ endif()
 
 file(READ "${CURRENT_PACKAGES_DIR}/share/${PORT}/log4cxxConfig.cmake" _contents)
 file(WRITE "${CURRENT_PACKAGES_DIR}/share/${PORT}/log4cxxConfig.cmake"
-"include(CMakeFindDependencyMacro)
+    "include(CMakeFindDependencyMacro)
 find_dependency(expat CONFIG)
 ${_contents}"
 )
 
 file(REMOVE_RECURSE "${CURRENT_PACKAGES_DIR}/debug/include" "${CURRENT_PACKAGES_DIR}/debug/share")
 
-# Handle copyright
-file(INSTALL "${SOURCE_PATH}/LICENSE" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")
