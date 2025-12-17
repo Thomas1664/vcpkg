@@ -1,0 +1,136 @@
+name: Version Database Validation
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - 'ports/**'
+      - 'versions/**'
+
+jobs:
+  validate-version-database:
+    runs-on: ubuntu-22.04
+    name: Validate Version Database
+
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 50
+
+      - name: Bootstrap vcpkg
+        run: ./bootstrap-vcpkg.sh
+
+      - name: Configure Git
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+
+      - name: Validate Version Database
+        id: validate
+        run: |
+          set -e
+          
+          # Create a temporary commit to capture the PR state
+          git add -u
+          git commit -m "temp-commit" --allow-empty
+          
+          # Restore the version database from the base branch
+          git checkout HEAD^^ -- versions
+          git restore --staged versions
+          
+          # Check for deprecated version-string usage
+          echo "Checking for deprecated version-string usage..."
+          ./vcpkg x-add-version --all --skip-formatting-check | grep 'instead of "version-string"' | tee version-string-warnings.txt || true
+          
+          # Restore the versions directory to run the full validation
+          git checkout -- versions
+          
+          # Run x-add-version to see what the correct version database should be
+          echo "Validating version database entries..."
+          ./vcpkg x-add-version --all --skip-formatting-check --skip-version-format-check | tee x-add-version-output.txt || true
+          
+          # Capture the diff between actual and expected version database
+          git diff > version-database.diff
+          
+          # Reset the temporary commit
+          git reset HEAD~ --mixed
+          
+          echo "Version database validation complete."
+
+      - name: Check for Version Database Issues
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Read the output files
+            const versionStringWarnings = fs.readFileSync('version-string-warnings.txt', 'utf8').trim();
+            const addVersionOutput = fs.readFileSync('x-add-version-output.txt', 'utf8').trim();
+            const versionDiff = fs.readFileSync('version-database.diff', 'utf8').trim();
+            
+            let hasErrors = false;
+            let hasCriticalErrors = false;
+            
+            // Check for deprecated version-string usage
+            if (versionStringWarnings !== '') {
+              core.warning('⚠️ Deprecated version-string usage detected:\n\n' + versionStringWarnings);
+              core.summary.addHeading('⚠️ Version Format Warnings', 3);
+              core.summary.addRaw(versionStringWarnings);
+              core.summary.addEOL();
+            }
+            
+            // Check if x-add-version produced any error output
+            if (addVersionOutput !== '') {
+              core.error('❌ Version database validation failed:\n\n' + addVersionOutput);
+              core.summary.addHeading('❌ Version Database Validation Errors', 3);
+              core.summary.addCodeBlock(addVersionOutput, 'text');
+              core.summary.addEOL();
+              core.summary.addRaw('**Issue**: PRs must add only one version per port, and must not modify any published versions.\n\n');
+              core.summary.addRaw('**When making changes to a library**, the version or port-version in vcpkg.json must be modified, and the version database must be updated.\n\n');
+              hasErrors = true;
+              hasCriticalErrors = true;
+            }
+            
+            // Check if there's a diff (meaning the version database needs updates)
+            if (versionDiff !== '') {
+              core.error('❌ Version database is not up to date');
+              core.summary.addHeading('❌ Version Database Requires Update', 3);
+              core.summary.addRaw('The version database needs to be updated. After committing all your changes, run:\n\n');
+              core.summary.addCodeBlock(
+                'git add -u && git commit\n' +
+                'git checkout ' + context.payload.pull_request.base.sha + ' -- versions\n' +
+                './vcpkg x-add-version --all',
+                'bash'
+              );
+              core.summary.addEOL();
+              core.summary.addRaw('Expected changes:\n\n');
+              core.summary.addCodeBlock(versionDiff, 'diff');
+              hasErrors = true;
+            }
+            
+            // Write the summary
+            if (hasErrors) {
+              core.summary.addEOL();
+              core.summary.addHeading('📋 Version Database Requirements', 3);
+              core.summary.addList([
+                '✅ Each modified port must have a new version entry',
+                '✅ Existing version entries must not be modified',
+                '✅ Only additions to the version database are allowed',
+                '✅ Version entries must be added in the correct format'
+              ]);
+            } else {
+              core.summary.addHeading('✅ Version Database Validation Passed', 2);
+              core.summary.addRaw('All version database entries are correct!');
+            }
+            
+            await core.summary.write();
+            
+            // Fail the check if there are critical errors
+            if (hasCriticalErrors) {
+              core.setFailed('Version database validation failed. Please review the errors above and update the version database accordingly.');
+            } else if (hasErrors) {
+              core.setFailed('Version database needs to be updated. Please follow the instructions above.');
+            }
