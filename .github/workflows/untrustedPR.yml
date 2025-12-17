@@ -87,9 +87,10 @@ jobs:
             }
             if (add_version_out !== "") {
               var add_version_output = '';
-              add_version_output += "PRs must add only one version, and must not modify any published versions.\n";
-              add_version_output += "When making any changes to a library, the version or port-version in vcpkg.json must be modified, and the version database updated.\n";
-              add_version_output += "Making the following changes will fix this problem:";
+              add_version_output += "❌ **Version Database Validation Failed**\n\n";
+              add_version_output += "**Issue**: PRs must add only one version per port, and must not modify any published versions.\n\n";
+              add_version_output += "**When making changes to a library**, the version or port-version in vcpkg.json must be modified, and the version database must be updated.\n\n";
+              add_version_output += "**Making the following changes will fix this problem:**\n";
               add_version_output += "```diff\n" + add_version_out + "\n```";
               core.error(add_version_output);
               approve = false;
@@ -99,12 +100,16 @@ jobs:
             }
             if (add_version !== "") {
               var update_version_db_output = '';
-              update_version_db_output += "After committing all other changes, the version database must be updated.\n";
-              update_version_db_output += "This can be done by running the following commands after committing your changes:\n"
-              update_version_db_output += "\n"
+              update_version_db_output += "❌ **Version Database Requires Update**\n\n";
+              update_version_db_output += "After committing all other changes, the version database must be updated.\n\n";
+              update_version_db_output += "**Run the following commands after committing your changes:**\n\n"
+              update_version_db_output += "```bash\n"
               update_version_db_output += "git add -u && git commit\n"
               update_version_db_output += "git checkout ${{ github.event.pull_request.base.sha }} -- versions\n"
-              update_version_db_output += "./vcpkg x-add-version --all"
+              update_version_db_output += "./vcpkg x-add-version --all\n"
+              update_version_db_output += "```\n\n"
+              update_version_db_output += "**Expected changes:**\n"
+              update_version_db_output += "```diff\n" + add_version + "\n```"
               core.error(update_version_db_output);
               approve = false;
             }
@@ -185,6 +190,18 @@ jobs:
 
 
               core.notice(license_output, {file, startLine: line_number});
+            }
+
+            // Add version database requirements summary if there were version-related errors
+            if (add_version_out !== "" || add_version !== "") {
+              core.summary.addEOL();
+              core.summary.addHeading('📋 Version Database Requirements', 3);
+              core.summary.addList([
+                'Each modified port must have a new version entry',
+                'Existing version entries must not be modified',
+                'Only additions to the version database are allowed',
+                'Version entries must be added in the correct format'
+              ]);
             }
 
             core.summary.write();
