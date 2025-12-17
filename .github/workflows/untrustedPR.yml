@@ -102,14 +102,14 @@ jobs:
               var update_version_db_output = '';
               update_version_db_output += "❌ **Version Database Requires Update**\n\n";
               update_version_db_output += "After committing all other changes, the version database must be updated.\n\n";
-              update_version_db_output += "**Run the following commands after committing your changes:**\n\n"
-              update_version_db_output += "```bash\n"
-              update_version_db_output += "git add -u && git commit\n"
-              update_version_db_output += "git checkout ${{ github.event.pull_request.base.sha }} -- versions\n"
-              update_version_db_output += "./vcpkg x-add-version --all\n"
-              update_version_db_output += "```\n\n"
-              update_version_db_output += "**Expected changes:**\n"
-              update_version_db_output += "```diff\n" + add_version + "\n```"
+              update_version_db_output += "**Run the following commands after committing your changes:**\n\n";
+              update_version_db_output += "```bash\n";
+              update_version_db_output += "git add -u && git commit\n";
+              update_version_db_output += "git checkout ${{ github.event.pull_request.base.sha }} -- versions\n";
+              update_version_db_output += "./vcpkg x-add-version --all\n";
+              update_version_db_output += "```\n\n";
+              update_version_db_output += "**Expected changes:**\n";
+              update_version_db_output += "```diff\n" + add_version + "\n```";
               core.error(update_version_db_output);
               approve = false;
             }
