@@ -55,7 +55,7 @@ jobs:
           git commit -m "temp-commit" --allow-empty
           
           # Restore the version database from the base branch
-          git checkout HEAD^^ -- versions
+          git checkout ${{ github.event.pull_request.base.sha }} -- versions
           git restore --staged versions
           
           # Check for deprecated version-string usage
@@ -126,7 +126,7 @@ jobs:
               core.summary.addRaw('The version database needs to be updated. After committing all your changes, run:\n\n');
               core.summary.addCodeBlock(
                 'git add -u && git commit\n' +
-                'git checkout ' + context.payload.pull_request.base.sha + ' -- versions\n' +
+                'git checkout ${{ github.event.pull_request.base.sha }} -- versions\n' +
                 './vcpkg x-add-version --all',
                 'bash'
               );
