@@ -1,3 +1,17 @@
+# Version Database Validation Workflow
+#
+# This workflow validates that the version database at versions/ is correct.
+# It ensures that:
+# 1. For each modified port in ports/, a new entry is added to its version file
+# 2. Existing entries in the version database are not modified
+# 3. Only additions to the version database are allowed
+#
+# The workflow runs on every pull request that modifies ports/ or versions/ directories.
+# It uses the vcpkg x-add-version command to check that the version database is up-to-date
+# and that no existing version entries have been modified.
+#
+# If the validation fails, the workflow will provide clear instructions on how to fix the issue.
+
 name: Version Database Validation
 
 permissions:
@@ -27,6 +41,8 @@ jobs:
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
+          git --version
+          unset VCPKG_ROOT
 
       - name: Validate Version Database
         id: validate
