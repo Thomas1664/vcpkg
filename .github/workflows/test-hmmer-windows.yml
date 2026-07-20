@@ -1,0 +1,10 @@
+name: test hmmer windows
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: .\bootstrap-vcpkg.bat
+      - run: .\vcpkg.exe install hmmer --triplet x64-windows
