@@ -1,5 +1,8 @@
 name: test hmmer windows
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - hmmer
 
 jobs:
   build:
